@@ -19,9 +19,7 @@ public:
 	
 
 	int Run(SOCKET_CALLBACK callback, void* arg, short port = 9527) {
-		//1 进度的可控性 2 对接的方便性 3 可行性评估，提早暴露风险
-		// TODO: socket、bind、listen、accept、read、write、close
-		//套接字初始化
+		//socket、bind、listen、accept、read、write、close
 		bool ret = InitSocket(port);
 		if (ret == false)return -1;
 		std::list<CPacket> lstPackets;
