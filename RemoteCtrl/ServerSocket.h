@@ -53,7 +53,7 @@ private:
 		~CHelper() {CServerSocket::releaseInstance();}
 	};
 
-	CServerSocket& operator=(const CServerSocket& ss) {}
+	CServerSocket& operator=(const CServerSocket& ss) {};
 	CServerSocket(const CServerSocket& ss) {
 		m_sock = ss.m_sock;
 		m_client = ss.m_client;

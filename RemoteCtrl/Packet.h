@@ -7,6 +7,31 @@ class CPacket
 {
 public:
 	CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
+	~CPacket() {}
+	CPacket(const CPacket& pack) {
+		sHead = pack.sHead;
+		nLength = pack.nLength;
+		sCmd = pack.sCmd;
+		strData = pack.strData;
+		sSum = pack.sSum;
+	}
+	CPacket& operator=(const CPacket& pack) {
+		if (this != &pack) {
+			sHead = pack.sHead;
+			nLength = pack.nLength;
+			sCmd = pack.sCmd;
+			strData = pack.strData;
+			sSum = pack.sSum;
+		}
+		return *this;
+	}
+
+	/// <summary>
+	/// 将服务端的数据打包，准备发给客户端
+	/// </summary>
+	/// <param name="nCmd">命令</param>
+	/// <param name="pData">数据</param>
+	/// <param name="nSize">数据大小</param>
 	CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 		sHead = 0xFEFF;
 		nLength = nSize + 4;
@@ -19,18 +44,16 @@ public:
 			strData.clear();
 		}
 		sSum = 0;
-		for (size_t j = 0; j < strData.size(); j++)
-		{
+		for (size_t j = 0; j < strData.size(); j++) {
 			sSum += BYTE(strData[j]) & 0xFF;
 		}
 	}
-	CPacket(const CPacket& pack) {
-		sHead = pack.sHead;
-		nLength = pack.nLength;
-		sCmd = pack.sCmd;
-		strData = pack.strData;
-		sSum = pack.sSum;
-	}
+
+	/// <summary>
+	/// 解析从客户端(控制端)发来的包
+	/// </summary>
+	/// <param name="pData">控制端发来的数据</param>
+	/// <param name="nSize">tcp缓冲区接收到pData的大小(最多1300字节)，输出代表解析后指向的位置(如果正常，则为包末尾的数据)，等于0表示解析失败</param>
 	CPacket(const BYTE* pData, size_t& nSize) {
 		size_t i = 0;
 		for (; i < nSize; i++) {
@@ -57,8 +80,7 @@ public:
 		}
 		sSum = *(WORD*)(pData + i); i += 2;
 		WORD sum = 0;
-		for (size_t j = 0; j < strData.size(); j++)
-		{
+		for (size_t j = 0; j < strData.size(); j++) {
 			sum += BYTE(strData[j]) & 0xFF;
 		}
 		if (sum == sSum) {
@@ -67,21 +89,10 @@ public:
 		}
 		nSize = 0;
 	}
-	~CPacket() {}
-	CPacket& operator=(const CPacket& pack) {
-		if (this != &pack) {
-			sHead = pack.sHead;
-			nLength = pack.nLength;
-			sCmd = pack.sCmd;
-			strData = pack.strData;
-			sSum = pack.sSum;
-		}
-		return *this;
-	}
+
 	//包数据的大小
-	int Size() {
-		return nLength + 6;
-	}
+	int Size() { return nLength + 6;}
+
 	/// <summary>
 	/// 打包好，供send使用。转换成const char*
 	/// </summary>
@@ -96,7 +107,6 @@ public:
 		*(WORD*)pData = sSum;
 		return strOut.c_str();
 	}
-
 public:
 	WORD sHead;//固定位 0xFEFF
 	DWORD nLength;//包长度（从控制命令开始，到和校验结束）
