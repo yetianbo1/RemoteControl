@@ -78,9 +78,14 @@ public:
 		}
 		return *this;
 	}
-	int Size() {//包数据的大小
+	//包数据的大小
+	int Size() {
 		return nLength + 6;
 	}
+	/// <summary>
+	/// 打包好，供send使用。转换成const char*
+	/// </summary>
+	/// <returns></returns> const char* 的包数据
 	const char* Data() {
 		strOut.resize(nLength + 6);
 		BYTE* pData = (BYTE*)strOut.c_str();
@@ -102,27 +107,3 @@ public:
 };
 #pragma pack(pop)
 
-typedef struct MouseEvent {
-	MouseEvent() {
-		nAction = 0;
-		nButton = -1;
-		ptXY.x = 0;
-		ptXY.y = 0;
-	}
-	WORD nAction;//点击、移动、双击
-	WORD nButton;//左键、右键、中键
-	POINT ptXY;//坐标
-}MOUSEEV, * PMOUSEEV;
-
-typedef struct file_info {
-	file_info() {
-		IsInvalid = FALSE;
-		IsDirectory = -1;
-		HasNext = TRUE;
-		memset(szFileName, 0, sizeof(szFileName));
-	}
-	BOOL IsInvalid;//是否有效
-	BOOL IsDirectory;//是否为目录 0 否 1 是
-	BOOL HasNext;//是否还有后续 0 没有 1 有
-	char szFileName[256];//文件名
-}FILEINFO, * PFILEINFO;

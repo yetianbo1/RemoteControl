@@ -26,10 +26,10 @@ using namespace std;
 void iocp();
 int main()
 {
-	if (!CEdoyunTool::Init())return 1;
+	if (!CEdoyunTool::Init()) return 1;
 	//iocp();
 	CCommand cmd;
-	int ret = CServerSocket::getInstance()->Run(&CCommand::RunCommand, &cmd);
+	int ret = CServerSocket::getInstance()->Run(&CCommand::RunCommand,&cmd);
 	switch (ret) {
 	case -1:
 		MessageBox(NULL, _T("网络初始化异常，未能成功初始，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);

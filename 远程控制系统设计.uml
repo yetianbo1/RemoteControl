@@ -1901,8 +1901,6 @@ b.请求控制客户端
 <XPD:ATTR name="TypeExpression" type="string">CPacket&amp;</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">oEtHbVZGMkGSc+KWv0D+ggAA</XPD:REF>
 </XPD:OBJ>
-<XPD:ATTR name="#CallActions" type="integer">1</XPD:ATTR>
-<XPD:REF name="CallActions[0]">GKNOIVprqEODu/9XMqfB1QAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="Operations[2]" type="UMLOperation" guid="NW/Q+9jRLkaZ88cdgxCJegAA">
 <XPD:ATTR name="Name" type="string">threadLockDlg</XPD:ATTR>
@@ -5178,7 +5176,7 @@ b.请求控制客户端
 <XPD:OBJ name="NameLabel" type="EdgeLabelView" guid="D1mQlLI0806Yny/4qmoX5AAA">
 <XPD:ATTR name="Alpha" type="real">1.5707963267949</XPD:ATTR>
 <XPD:ATTR name="Distance" type="real">10</XPD:ATTR>
-<XPD:ATTR name="Text" type="string">10 : RunCommand()</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">10 : RunCommand - callback()</XPD:ATTR>
 <XPD:REF name="Model">MRFdSgcZ80q6HxVSxOzjwwAA</XPD:REF>
 <XPD:REF name="HostEdge">Y2uDKeL690u0TOXMcLUnOAAA</XPD:REF>
 </XPD:OBJ>
@@ -5477,11 +5475,11 @@ b.请求控制客户端
 <XPD:REF name="Views[3]">UcVhXXcJrEi5/LFrwfKNdAAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="ParticipatingStimuli[9]" type="UMLStimulus" guid="MRFdSgcZ80q6HxVSxOzjwwAA">
+<XPD:ATTR name="Name" type="string">RunCommand - callback</XPD:ATTR>
 <XPD:REF name="Sender">73ihi2u9qUGliq6SwDhDSgAA</XPD:REF>
 <XPD:REF name="Receiver">K8cOOF539kCFFQg12OtdMQAA</XPD:REF>
 <XPD:OBJ name="Action" type="UMLCallAction" guid="GKNOIVprqEODu/9XMqfB1QAA">
 <XPD:REF name="Stimulus">MRFdSgcZ80q6HxVSxOzjwwAA</XPD:REF>
-<XPD:REF name="Operation">oEtHbVZGMkGSc+KWv0D+ggAA</XPD:REF>
 </XPD:OBJ>
 <XPD:REF name="InteractionInstanceSet">VcPJUzlM+kSugG8lTVNJ8QAA</XPD:REF>
 <XPD:ATTR name="#Views" type="integer">4</XPD:ATTR>

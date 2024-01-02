@@ -1,9 +1,38 @@
 #pragma once
+typedef struct MouseEvent {
+	MouseEvent() {
+		nAction = 0;
+		nButton = -1;
+		ptXY.x = 0;
+		ptXY.y = 0;
+	}
+	WORD nAction;//点击、移动、双击
+	WORD nButton;//左键、右键、中键
+	POINT ptXY;//坐标
+}MOUSEEV, * PMOUSEEV;
+
+typedef struct file_info {
+	file_info() {
+		IsInvalid = FALSE;
+		IsDirectory = -1;
+		HasNext = TRUE;
+		memset(szFileName, 0, sizeof(szFileName));
+	}
+	BOOL IsInvalid;//是否有效
+	BOOL IsDirectory;//是否为目录 0 否 1 是
+	BOOL HasNext;//是否还有后续 0 没有 1 有
+	char szFileName[256];//文件名
+}FILEINFO, * PFILEINFO;
+
 class CEdoyunTool
 {
 public:
-	static void Dump(BYTE* pData, size_t nSize)
-	{
+	/// <summary>
+	/// 把数据输出到控制台
+	/// </summary>
+	/// <param name="pData"></param>
+	/// <param name="nSize"></param>
+	static void Dump(BYTE* pData, size_t nSize) {
 		std::string strOut;
 		for (size_t i = 0; i < nSize; i++)
 		{
@@ -15,7 +44,49 @@ public:
 		strOut += "\n";
 		OutputDebugStringA(strOut.c_str());
 	}
+	//用于带mfc命令行项目初始化（通用）
+	static bool Init() {
+		HMODULE hModule = ::GetModuleHandle(nullptr);
+		if (hModule == nullptr) {
+			wprintf(L"错误: GetModuleHandle 失败\n");
+			return false;
+		}
+		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0))
+		{
+			// TODO: 在此处为应用程序的行为编写代码。
+			wprintf(L"错误: MFC 初始化失败\n");
+			return false;
+		}
+		return true;
+	}
 
+	static std::string GetErrInfo(int wsaErrCode){
+		std::string ret;
+		LPVOID lpMsgBuf = NULL;
+		FormatMessage(
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+			NULL,
+			wsaErrCode,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR)&lpMsgBuf, 0, NULL);
+		ret = (char*)lpMsgBuf;
+		LocalFree(lpMsgBuf);
+		return ret;
+	}
+
+	static void ShowError(){
+		LPWSTR lpMessageBuf = NULL;
+		//strerror(errno);//标准C语音库
+		FormatMessage(
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+			NULL, GetLastError(),
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPWSTR)&lpMessageBuf, 0, NULL);
+		OutputDebugString(lpMessageBuf);
+		MessageBox(NULL, lpMessageBuf, _T("发生错误"), 0);
+		LocalFree(lpMessageBuf);
+	}
+	/*
 	static bool IsAdmin() {
 		HANDLE hToken = NULL;
 		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
@@ -55,28 +126,8 @@ public:
 		CloseHandle(pi.hThread);
 		return true;
 	}
-	static void ShowError()
-	{
-		LPWSTR lpMessageBuf = NULL;
-		//strerror(errno);//标准C语音库
-		FormatMessage(
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-			NULL, GetLastError(),
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(LPWSTR)&lpMessageBuf, 0, NULL);
-		OutputDebugString(lpMessageBuf);
-		MessageBox(NULL, lpMessageBuf, _T("发生错误"), 0);
-		LocalFree(lpMessageBuf);
-	}
-	/**
-	* 改bug的思路
-	* 0 观察现象
-	* 1 先确定范围
-	* 2 分析错误的可能性
-	* 3 调试或者打日志，排查错误
-	* 4 处理错误
-	* 5 验证/长时间验证/多次验证/多条件的验证
-	**/
+
+
 	static BOOL WriteStartupDir(const CString& strPath)
 	{//通过修改开机启动文件夹来实现开机启动
 		TCHAR sPath[MAX_PATH] = _T("");
@@ -118,36 +169,6 @@ public:
 		RegCloseKey(hKey);
 		return true;
 	}
-
-	static bool Init()
-	{//用于带mfc命令行项目初始化（通用）
-		HMODULE hModule = ::GetModuleHandle(nullptr);
-		if (hModule == nullptr) {
-			wprintf(L"错误: GetModuleHandle 失败\n");
-			return false;
-		}
-		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0))
-		{
-			// TODO: 在此处为应用程序的行为编写代码。
-			wprintf(L"错误: MFC 初始化失败\n");
-			return false;
-		}
-		return true;
-	}
-
-	static std::string GetErrInfo(int wsaErrCode)
-	{
-		std::string ret;
-		LPVOID lpMsgBuf = NULL;
-		FormatMessage(
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-			NULL,
-			wsaErrCode,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(LPTSTR)&lpMsgBuf, 0, NULL);
-		ret = (char*)lpMsgBuf;
-		LocalFree(lpMsgBuf);
-		return ret;
-	}
+	*/
 };
 

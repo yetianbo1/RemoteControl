@@ -4,8 +4,8 @@
 #include <list>
 #include "Packet.h"
 
-
-typedef void (*SOCKET_CALLBACK)(void*, int, std::list<CPacket>&, CPacket&);
+//callback声明
+typedef void (*SOCKET_CALLBACK)(void* ,int, std::list<CPacket>&, CPacket&);
 
 class CServerSocket
 {
@@ -17,121 +17,24 @@ public:
 		return m_instance;
 	}
 	
-
-	int Run(SOCKET_CALLBACK callback, void* arg, short port = 9527) {
-		//socket、bind、listen、accept、read、write、close
-		bool ret = InitSocket(port);
-		if (ret == false)return -1;
-		std::list<CPacket> lstPackets;
-		m_callback = callback;
-		m_arg = arg;
-		int count = 0;
-		while (true) {
-			if (AcceptClient() == false) {
-				if (count >= 3) {
-					return -2;
-				}
-				count++;
-			}
-			int ret = DealCommand();
-			if (ret > 0) {
-				m_callback(m_arg, ret, lstPackets, m_packet);
-				while (lstPackets.size() > 0) {
-					Send(lstPackets.front());
-					lstPackets.pop_front();
-				}
-			}
-			CloseClient();
-		}
-		return 0;
-	}
+	/// <summary>
+	/// 主循环结构:socket、bind、listen、accept、read、write、close
+	/// </summary>
+	/// <param name="callback">回调：RunCommand</param>
+	/// <param name="arg">传入cmd对象地址，供回调函数使用</param>
+	/// <param name="port">端口号，默认9527</param>
+	/// <returns></returns>
+	int Run(SOCKET_CALLBACK callback, void* arg, short port = 9527);
 protected:
-	bool InitSocket(short port) {
-		if (m_sock == -1)return false;
-		sockaddr_in serv_adr;
-		memset(&serv_adr, 0, sizeof(serv_adr));
-		serv_adr.sin_family = AF_INET;
-		serv_adr.sin_addr.s_addr = INADDR_ANY;
-		serv_adr.sin_port = htons(port);
-		//绑定
-		if (bind(m_sock, (sockaddr*)&serv_adr, sizeof(serv_adr)) == -1) {
-			return false;
-		}
-		if (listen(m_sock, 1) == -1) {
-			return false;
-		}
-
-		return true;
-	}
-	bool AcceptClient() {
-		TRACE("enter AcceptClient\r\n");
-		sockaddr_in client_adr;
-		int cli_sz = sizeof(client_adr);
-		m_client = accept(m_sock, (sockaddr*)&client_adr, &cli_sz);
-		TRACE("m_client = %d\r\n", m_client);
-		if (m_client == -1)return false;
-		return true;
-	}
+	bool InitSocket(short port);
+	bool AcceptClient();
 #define BUFFER_SIZE 4096
-	int DealCommand() {
-		if (m_client == -1)return -1;
-		//char buffer[1024] = "";
-		char* buffer = new char[BUFFER_SIZE];
-		if (buffer == NULL) {
-			TRACE("内存不足！\r\n");
-			return -2;
-		}
-		memset(buffer, 0, BUFFER_SIZE);
-		size_t index = 0;
-		while (true) {
-			size_t len = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
-			if (len <= 0) {
-				delete[]buffer;
-				return -1;
-			}
-			TRACE("recv %d\r\n", len);
-			index += len;
-			len = index;
-			m_packet = CPacket((BYTE*)buffer, len);
-			if (len > 0) {
-				memmove(buffer, buffer + len, BUFFER_SIZE - len);
-				index -= len;
-				delete[]buffer;
-				return m_packet.sCmd;
-			}
-		}
-		delete[]buffer;
-		return -1;
-	}
+	int DealCommand();
+	bool Send(const char* pData, int nSize);
+	bool Send(CPacket& pack);
+	void CloseClient();
 
-	bool Send(const char* pData, int nSize) {
-		if (m_client == -1)return false;
-		return send(m_client, pData, nSize, 0) > 0;
-	}
-	
-	bool Send(CPacket& pack) {
-		if (m_client == -1)return false;
-		//Dump((BYTE*)pack.Data(), pack.Size());
-		return send(m_client, pack.Data(), pack.Size(), 0) > 0;
-	}
-	
-	void CloseClient() {
-		if (m_client != INVALID_SOCKET) {
-			closesocket(m_client);
-			m_client = INVALID_SOCKET;
-		}
-	}
 private:
-	SOCKET_CALLBACK m_callback;
-	void* m_arg;
-	SOCKET m_client;
-	SOCKET m_sock;
-	CPacket m_packet;
-	CServerSocket& operator=(const CServerSocket& ss) {}
-	CServerSocket(const CServerSocket& ss) {
-		m_sock = ss.m_sock;
-		m_client = ss.m_client;
-	}
 	CServerSocket() {
 		m_client = INVALID_SOCKET;
 		if (InitSockEnv() == FALSE) {
@@ -144,6 +47,18 @@ private:
 		closesocket(m_sock);
 		WSACleanup();
 	}
+	class CHelper {
+	public:
+		CHelper() {CServerSocket::getInstance();}
+		~CHelper() {CServerSocket::releaseInstance();}
+	};
+
+	CServerSocket& operator=(const CServerSocket& ss) {}
+	CServerSocket(const CServerSocket& ss) {
+		m_sock = ss.m_sock;
+		m_client = ss.m_client;
+	}
+
 	BOOL InitSockEnv() {
 		WSADATA data;
 		if (WSAStartup(MAKEWORD(2, 0), &data) != 0) {
@@ -158,16 +73,13 @@ private:
 			delete tmp;
 		}
 	}
-	static CServerSocket* m_instance;
-	class CHelper {
-	public:
-		CHelper() {
-			CServerSocket::getInstance();
-		}
-		~CHelper() {
-			CServerSocket::releaseInstance();
-		}
-	};
+private:
+	//SOCKET_CALLBACK m_callback;
+	//void* m_arg;
+	SOCKET m_client;
+	SOCKET m_sock;
+	CPacket m_packet;
 	static CHelper m_helper;
+	static CServerSocket* m_instance;
 };
 
