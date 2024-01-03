@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "framework.h"
+#include "EdoyunTool.h"
 #include <string>
 #include <vector>
 #include <list>
@@ -14,6 +15,31 @@ class CPacket
 {
 public:
 	CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
+	~CPacket() {}
+	CPacket(const CPacket& pack) {
+		sHead = pack.sHead;
+		nLength = pack.nLength;
+		sCmd = pack.sCmd;
+		strData = pack.strData;
+		sSum = pack.sSum;
+	}
+	CPacket& operator=(const CPacket& pack) {
+		if (this != &pack) {
+			sHead = pack.sHead;
+			nLength = pack.nLength;
+			sCmd = pack.sCmd;
+			strData = pack.strData;
+			sSum = pack.sSum;
+		}
+		return *this;
+	}
+
+	/// <summary>
+	/// 将客户端的数据打包，准备发给服务端
+	/// </summary>
+	/// <param name="nCmd">命令</param>
+	/// <param name="pData">数据</param>
+	/// <param name="nSize">数据大小</param>
 	CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 		sHead = 0xFEFF;
 		nLength = nSize + 4;
@@ -26,18 +52,16 @@ public:
 			strData.clear();
 		}
 		sSum = 0;
-		for (size_t j = 0; j < strData.size(); j++)
-		{
+		for (size_t j = 0; j < strData.size(); j++) {
 			sSum += BYTE(strData[j]) & 0xFF;
 		}
 	}
-	CPacket(const CPacket& pack) {
-		sHead = pack.sHead;
-		nLength = pack.nLength;
-		sCmd = pack.sCmd;
-		strData = pack.strData;
-		sSum = pack.sSum;
-	}
+
+	/// <summary>
+	/// 解析从服务端(被控制端)发来的包
+	/// </summary>
+	/// <param name="pData">被控制端发来的数据</param>
+	/// <param name="nSize">tcp缓冲区接收到pData的大小(最多1300字节)，输出代表解析后指向的位置(如果正常，则为包末尾的数据)，等于0表示解析失败</param>
 	CPacket(const BYTE* pData, size_t& nSize) {
 		size_t i = 0;
 		for (; i < nSize; i++) {
@@ -75,20 +99,16 @@ public:
 		}
 		nSize = 0;
 	}
-	~CPacket() {}
-	CPacket& operator=(const CPacket& pack) {
-		if (this != &pack) {
-			sHead = pack.sHead;
-			nLength = pack.nLength;
-			sCmd = pack.sCmd;
-			strData = pack.strData;
-			sSum = pack.sSum;
-		}
-		return *this;
-	}
-	int Size() {//包数据的大小
+	
+	//包数据的大小
+	int Size() {
 		return nLength + 6;
 	}
+
+	/// <summary>
+	/// 打包好，供send使用。转换成const char*
+	/// </summary>
+	/// <returns></returns> const char* 的包数据
 	const char* Data(std::string& strOut) const {
 		strOut.resize(nLength + 6);
 		BYTE* pData = (BYTE*)strOut.c_str();
@@ -99,7 +119,6 @@ public:
 		*(WORD*)pData = sSum;
 		return strOut.c_str();
 	}
-
 public:
 	WORD sHead;//固定位 0xFEFF
 	DWORD nLength;//包长度（从控制命令开始，到和校验结束）
@@ -109,130 +128,59 @@ public:
 };
 #pragma pack(pop)
 
-typedef struct MouseEvent {
-	MouseEvent() {
-		nAction = 0;
-		nButton = -1;
-		ptXY.x = 0;
-		ptXY.y = 0;
-	}
-	WORD nAction;//点击、移动、双击
-	WORD nButton;//左键、右键、中键
-	POINT ptXY;//坐标
-}MOUSEEV, * PMOUSEEV;
-
-typedef struct file_info {
-	file_info() {
-		IsInvalid = FALSE;
-		IsDirectory = -1;
-		HasNext = TRUE;
-		memset(szFileName, 0, sizeof(szFileName));
-	}
-	BOOL IsInvalid;//是否有效
-	BOOL IsDirectory;//是否为目录 0 否 1 是
-	BOOL HasNext;//是否还有后续 0 没有 1 有
-	char szFileName[256];//文件名
-}FILEINFO, * PFILEINFO;
-
-
 enum {
 	CSM_AUTOCLOSE = 1,//CSM = Client Socket Mode 自动关闭模式
 };
 
-typedef struct PacketData {
-	std::string strData;
-	UINT nMode;
-	WPARAM wParam;
-	PacketData(const char* pData, size_t nLen, UINT mode, WPARAM nParam = 0) {
-		strData.resize(nLen);
-		memcpy((char*)strData.c_str(), pData, nLen);
-		nMode = mode;
-		wParam = nParam;
-	}
-	PacketData(const PacketData& data) {
-		strData = data.strData;
-		nMode = data.nMode;
-		wParam = data.wParam;
-	}
-	PacketData& operator=(const PacketData& data) {
-		if (this != &data) {
-			strData = data.strData;
-			nMode = data.nMode;
-			wParam = data.wParam;
-		}
-		return *this;
-	}
-}PACKET_DATA;
-
-std::string GetErrInfo(int wsaErrCode);
-void Dump(BYTE* pData, size_t nSize);
 class CClientSocket
 {
 public:
-	static CClientSocket* getInstance() {
-		if (m_instance == NULL) {//静态函数没有this指针，所以无法直接访问成员变量
-			m_instance = new CClientSocket();
-			TRACE("CClientSocket size is %d\r\n", sizeof(*m_instance));
-		}
-		return m_instance;
-	}
+	static CClientSocket* getInstance();
+
+	/// <summary>
+	/// socket、connect
+	/// </summary>
+	/// <returns></returns>
 	bool InitSocket();
 
-
 #define BUFFER_SIZE 4096000
-	int DealCommand() {
-		if (m_sock == -1)return -1;
-		char* buffer = m_buffer.data();//TODO:多线程发送命令时可能会出现冲突
-		static size_t index = 0;
-		while (true) {
-			size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
-			if (((int)len <= 0) && ((int)index <= 0)) {
-				return -1;
-			}
-			TRACE("recv len = %d(0x%08X) index = %d(0x%08X)\r\n", len, len, index, index);
-			index += len;
-			len = index;
-			TRACE("recv len = %d(0x%08X) index = %d(0x%08X)\r\n", len, len, index, index);
-			m_packet = CPacket((BYTE*)buffer, len);
-			TRACE("command %d\r\n", m_packet.sCmd);
-			if (len > 0) {
-				memmove(buffer, buffer + len, index - len);
-				index -= len;
-				return m_packet.sCmd;
-			}
-		}
-		return -1;
-	}
-	//bool SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed = true);
+	int DealCommand();
+
+	/// <summary>
+	/// 原始包二次封装，通过消息发送给处理线程
+	/// </summary>
+	/// <param name="hWnd">应答窗口</param>
+	/// <param name="pack">打包好的数据</param>
+	/// <param name="isAutoClosed">是否自动关闭窗口</param>
+	/// <param name="wParam">某些数据结构，默认为0</param>
+	/// <returns>发送是否成功</returns>
 	bool SendPacket(HWND hWnd, const CPacket& pack, bool isAutoClosed = true, WPARAM wParam = 0);
-	bool GetFilePath(std::string& strPath) {
-		if ((m_packet.sCmd >= 2) && (m_packet.sCmd <= 4)) {
-			strPath = m_packet.strData;
-			return true;
-		}
-		return false;
-	}
-	bool GetMouseEvent(MOUSEEV& mouse) {
-		if (m_packet.sCmd == 5) {
-			memcpy(&mouse, m_packet.strData.c_str(), sizeof(MOUSEEV));
-			return true;
-		}
-		return false;
-	}
-	CPacket& GetPacket() {
-		return m_packet;
-	}
-	void CloseSocket() {
-		closesocket(m_sock);
-		m_sock = INVALID_SOCKET;
-	}
-	void UpdateAddress(int nIP, int nPort) {
-		if ((m_nIP != nIP) || (m_nPort != nPort)) {
-			m_nIP = nIP;
-			m_nPort = nPort;
-		}
-	}
+	bool GetFilePath(std::string& strPath);
+	bool GetMouseEvent(MOUSEEV& mouse);
+	CPacket& GetPacket() { return m_packet;}
+	void CloseSocket();
+	void UpdateAddress(int nIP, int nPort);
 private:
+	CClientSocket();
+	~CClientSocket();
+	CClientSocket& operator=(const CClientSocket& ss) {}
+	CClientSocket(const CClientSocket& ss);
+	static unsigned __stdcall threadEntry(void* arg);
+	void threadFunc2();  //消息处理线程
+	//初始化sock版本
+	BOOL InitSockEnv();
+	static void releaseInstance();
+	bool Send(const char* pData, int nSize);
+	bool Send(const CPacket& pack);
+	/// <summary>
+	/// 线程收到消息后，send之后等待recv
+	/// </summary>
+	/// <param name="nMsg">消息</param>
+	/// <param name="wParam">二次封装数据包</param>
+	/// <param name="lParam">窗口</param>
+	void SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
+private:
+	static CClientSocket* m_instance;
 	HANDLE m_eventInvoke;//启动事件
 	UINT m_nThreadID;
 	typedef void(CClientSocket::* MSGFUNC)(UINT nMsg, WPARAM wParam, LPARAM lParam);
@@ -248,40 +196,8 @@ private:
 	std::vector<char> m_buffer;
 	SOCKET m_sock;
 	CPacket m_packet;
-	CClientSocket& operator=(const CClientSocket& ss) {}
-	CClientSocket(const CClientSocket& ss);
-	CClientSocket();
-	~CClientSocket() {
-		closesocket(m_sock);
-		m_sock = INVALID_SOCKET;
-		WSACleanup();
-	}
-	static unsigned __stdcall threadEntry(void* arg);
-	//void threadFunc();
-	void threadFunc2();
-	BOOL InitSockEnv() {
-		WSADATA data;
-		if (WSAStartup(MAKEWORD(1, 1), &data) != 0) {
-			return FALSE;
-		}
-		return TRUE;
-	}
-	static void releaseInstance() {
-		TRACE("CClientSocket has been called!\r\n");
-		if (m_instance != NULL) {
-			CClientSocket* tmp = m_instance;
-			m_instance = NULL;
-			delete tmp;
-			TRACE("CClientSocket has released!\r\n");
-		}
-	}
-	bool Send(const char* pData, int nSize) {
-		if (m_sock == -1)return false;
-		return send(m_sock, pData, nSize, 0) > 0;
-	}
-	bool Send(const CPacket& pack);
-	void SendPack(UINT nMsg, WPARAM wParam/*缓冲区的值*/, LPARAM lParam/*缓冲区的长度*/);
-	static CClientSocket* m_instance;
+
+private:
 	class CHelper {
 	public:
 		CHelper() {

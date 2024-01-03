@@ -153,12 +153,10 @@ unsigned __stdcall CClientController::threadEntry(void* arg)
 	return 0;
 }
 
-LRESULT CClientController::OnShowStatus(UINT nMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CClientController::OnShowStatus(UINT nMsg, WPARAM wParam, LPARAM lParam){
 	return m_statusDlg.ShowWindow(SW_SHOW);
 }
 
-LRESULT CClientController::OnShowWatcher(UINT nMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CClientController::OnShowWatcher(UINT nMsg, WPARAM wParam, LPARAM lParam){
 	return m_watchDlg.DoModal();
 }

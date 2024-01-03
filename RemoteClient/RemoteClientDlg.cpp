@@ -171,7 +171,7 @@ HCURSOR CRemoteClientDlg::OnQueryDragIcon()
 
 void CRemoteClientDlg::OnBnClickedBtnTest()
 {
-	CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 1981);
+	CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 2023);
 }
 
 
@@ -203,7 +203,7 @@ void CRemoteClientDlg::DealCommand(WORD nCmd, const std::string& strData, LPARAM
 	case 9:
 		MessageBox("删除文件完成！", "操作完成", MB_ICONINFORMATION);
 		break;
-	case 1981:
+	case 2023:
 		MessageBox("连接测试成功！", "连接成功", MB_ICONINFORMATION);
 		break;
 	default:
@@ -373,7 +373,6 @@ void CRemoteClientDlg::OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult)
 void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
 	*pResult = 0;
 	CPoint ptMouse, ptList;
 	GetCursorPos(&ptMouse);
@@ -469,8 +468,7 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 	if (lParam == -1 || (lParam == -2)) {
 		TRACE("socket is error %d\r\n", lParam);
 	}
-	else if (lParam == 1) {
-		//对方关闭了套接字
+	else if (lParam == 1) {  //对方关闭了套接字
 		TRACE("socket is closed!\r\n");
 	}
 	else {

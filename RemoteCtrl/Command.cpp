@@ -19,7 +19,7 @@ CCommand::CCommand() :threadid(0)
 		{7,&CCommand::LockMachine},
 		{8,&CCommand::UnlockMachine},
 		{9,&CCommand::DeleteLocalFile},
-		{1981,&CCommand::TestConnect},
+		{2023,&CCommand::TestConnect},
 		{-1,NULL}
 	};
 	for (int i = 0; data[i].nCmd != -1; i++) {
@@ -314,7 +314,7 @@ int CCommand::UnlockMachine(std::list<CPacket>& lstPacket, CPacket& inPacket){
 }
 
 int CCommand::TestConnect(std::list<CPacket>& lstPacket, CPacket& inPacket){
-	lstPacket.push_back(CPacket(1981, NULL, 0));
+	lstPacket.push_back(CPacket(2023, NULL, 0));
 	return 0;
 }
 

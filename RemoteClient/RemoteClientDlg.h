@@ -26,8 +26,14 @@ protected:
 public:
 	void LoadFileInfo();
 private:
-	bool m_isClosed;//监视是否关闭
-private://TODO:代码即文档
+	bool m_isClosed; //监视是否关闭
+private:
+	/// <summary>
+	/// 控制端作出反应，处理响应业务
+	/// </summary>
+	/// <param name="nCmd">cmd</param>
+	/// <param name="strData">数据包</param>
+	/// <param name="lParam">某些数据结构</param>
 	void DealCommand(WORD nCmd, const std::string& strData, LPARAM lParam);
 	void InitUIData();
 	void LoadFileCurrent();
@@ -48,22 +54,41 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+
+	/// <summary>
+	/// 接受线程中的数据，作相应窗口显示处理
+	/// </summary>
+	/// <param name="wParam">服务端发来的数据</param>
+	/// <param name="lParam">发送消息附带的数据</param>
+	/// <returns></returns>
+	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
+	//自定义消息函数
+	//点击“连接测试”
 	afx_msg void OnBnClickedBtnTest();
+	//查看“查看文件信息”
+	afx_msg void OnBnClickedBtnFileinfo();
+	//双击“文件树”
+	afx_msg void OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
+	//单击“文件树”
+	afx_msg void OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
+	//展开“文件列表”
+	afx_msg void OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult);
+	//点击“下载文件”
+	afx_msg void OnDownloadFile();
+	//点击“删除文件”
+	afx_msg void OnDeleteFile();
+	//点击“打开文件”
+	afx_msg void OnRunFile();
+	//点击“远程监控”
+	afx_msg void OnBnClickedBtnStartWatch();
+	//更改IP
+	afx_msg void OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult);
+	//更改端口
+	afx_msg void OnEnChangeEditPort();
+public:
 	DWORD m_server_address;
 	CString m_nPort;
-	afx_msg void OnBnClickedBtnFileinfo();
 	CTreeCtrl m_Tree;
-	afx_msg void OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
-	// 显示文件
 	CListCtrl m_List;
-	afx_msg void OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDownloadFile();
-	afx_msg void OnDeleteFile();
-	afx_msg void OnRunFile();
-	afx_msg void OnBnClickedBtnStartWatch();
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnEnChangeEditPort();
-	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 };

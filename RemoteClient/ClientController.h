@@ -7,16 +7,12 @@
 #include "resource.h"
 #include "EdoyunTool.h"
 
-
 //#define WM_SEND_DATA (WM_USER+2) //发送数据
 #define WM_SHOW_STATUS (WM_USER+3) //展示状态
 #define WM_SHOW_WATCH (WM_USER+4) //远程监控
 #define WM_SEND_MESSAGE (WM_USER+0x1000) //自定义消息处理
 
 //业务逻辑和流程，是随时可能发生改变的！！！！！
-//业务逻辑和流程，是随时可能发生改变的！！！！！
-//业务逻辑和流程，是随时可能发生改变的！！！！！
-
 class CClientController
 {
 public:
@@ -37,17 +33,27 @@ public:
 		CClientSocket::getInstance()->CloseSocket();
 	}
 	
-	//1 查看磁盘分区
-	//2 查看指定目录下的文件
-	//3 打开文件
-	//4 下载文件
-	//9 删除文件
-	//5 鼠标操作
-	//6 发送屏幕内容
-	//7 锁机
-	//8 解锁
-	//1981 测试连接
-	//返回值：是状态，true是成功 false是失败
+	/// <summary>
+	/// 消息->打包数据包->发送
+	/// </summary>
+	/// <param name="hWnd">数据包收到后，需要应答的窗口</param>
+	/// <param name="nCmd">
+	/// 1:查看磁盘分区 
+	/// 2:查看指定目录下的文件 
+	/// 3:打开文件 
+	/// 4:下载文件 
+	/// 5:鼠标操作 
+	/// 6:发送屏幕内容 
+	/// 7:锁机 
+	/// 8:解锁 
+	/// 9:删除文件 
+	/// 2023:测试连接 
+	/// </param>
+	/// <param name="bAutoClose">是否自动关闭窗口，默认自动关闭</param>
+	/// <param name="pData">数据（未打包）</param>
+	/// <param name="nLength">数据大小</param>
+	/// <param name="wParam">某些数据结构，默认为0</param>
+	/// <returns>true成功，false失败</returns>
 	bool SendCommandPacket(
 		HWND hWnd,//数据包受到后，需要应答的窗口
 		int nCmd,
